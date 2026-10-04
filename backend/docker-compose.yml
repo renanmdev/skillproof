@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: skillproof
+      POSTGRES_USER: skillproof
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-skillproof_local}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skillproof -d skillproof"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  backend:
+    build: .
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/skillproof
+      DB_USERNAME: skillproof
+      DB_PASSWORD: ${DB_PASSWORD:-skillproof_local}
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+volumes:
+  postgres_data:
